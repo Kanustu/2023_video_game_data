@@ -17,6 +17,12 @@ def create_df(table):
     df = pd.DataFrame(columns = titles)
     return df
 
+def find_rows(table):
+    return table.find_all('tr')
+
+def create_csv(data, title):
+    data.to_csv(f'{title}.csv', index=False)
+
 
 ratings_soup = data_retrieval(game_ratings_url)
 sales_soup = data_retrieval(game_highest_selling_url)
@@ -25,11 +31,12 @@ sales_soup = data_retrieval(game_highest_selling_url)
 ratings_table = ratings_soup.find_all('table')[3]
 sales_table = sales_soup.find_all('table')[27]
 
+# Create Dataframe from tables
 ratings_df = create_df(ratings_table)
 sales_df = create_df(sales_table)
 
-ratings_rows = ratings_table.find_all('tr')
-sales_rows = sales_table.find_all('tr')
+ratings_rows = find_rows(ratings_table)
+sales_rows = find_rows(sales_table)
 
 # Iterate through each row in the data_rows list, starting from the second row (index 1)
 for row in ratings_rows[1:]:
@@ -61,5 +68,5 @@ for x in new_list:
     sales_df.loc[length] = x
 sales_df.drop(columns=['Note'], inplace = True)
 
-ratings_df.to_csv('top_rated_games_2023.csv', index=False)
-sales_df.to_csv('top_selling_games_2023.csv', index=False)
+create_csv(ratings_df, 'top_rated_games_2023')
+create_csv(sales_df, 'top_selling_games_2023')
