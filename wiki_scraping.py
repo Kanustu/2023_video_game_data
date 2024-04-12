@@ -1,3 +1,4 @@
+#Import libraries
 import pandas as pd
 from bs4 import BeautifulSoup
 import requests
@@ -5,23 +6,27 @@ import requests
 game_ratings_url = 'https://en.wikipedia.org/wiki/2023_in_video_games'
 game_highest_selling_url = 'https://en.wikipedia.org/wiki/Best-selling_video_games_in_the_United_States_by_year'
 
-ratings = requests.get(game_ratings_url)
-sales = requests.get(game_highest_selling_url)
+def data_retrieval(url):
+    data = requests.get(url)
+    soup = BeautifulSoup(data.text, 'html.parser')
+    return soup
 
-ratings_soup = BeautifulSoup(ratings.text, 'html.parser')
-sales_soup = BeautifulSoup(sales.text, 'html.parser')
+def create_df(table):
+    header = table.find_all('th')
+    titles = [title.text.strip() for title in header]
+    df = pd.DataFrame(columns = titles)
+    return df
 
+
+ratings_soup = data_retrieval(game_ratings_url)
+sales_soup = data_retrieval(game_highest_selling_url)
+
+# Find the specific tables wanted
 ratings_table = ratings_soup.find_all('table')[3]
 sales_table = sales_soup.find_all('table')[27]
 
-ratings_header = ratings_table.find_all('th')
-sales_header = sales_table.find_all('th')
-
-ratings_titles = [title.text.strip() for title in ratings_header]
-sales_titles = [title.text.strip() for title in sales_header]
-
-ratings_df = pd.DataFrame(columns = ratings_titles)
-sales_df = pd.DataFrame(columns = sales_titles)
+ratings_df = create_df(ratings_table)
+sales_df = create_df(sales_table)
 
 ratings_rows = ratings_table.find_all('tr')
 sales_rows = sales_table.find_all('tr')
@@ -51,9 +56,9 @@ for row in sales_rows[1:]:
 new_list[9].insert(3, new_list[8][3])
 new_list[6].insert(3, new_list[5][3])
 
-for list in new_list:
+for x in new_list:
     length = len(sales_df)
-    sales_df.loc[length] = list
+    sales_df.loc[length] = x
 sales_df.drop(columns=['Note'], inplace = True)
 
 ratings_df.to_csv('top_rated_games_2023.csv', index=False)
